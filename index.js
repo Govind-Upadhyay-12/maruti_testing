@@ -13,20 +13,15 @@ db().then(() => {
   console.error("Error connecting to the database:", error);
   process.exit(1); 
 });
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(logger("dev"));
-
 app.use('/api/v1',routes);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
-
-
-
 app.listen(3000, () => {
     console.log(`Server is running on port ${3000}`);
 });
