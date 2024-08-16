@@ -64,7 +64,13 @@ router.post('/login', async (req, res) => {
   try {
     let user = await User.findOne({ mspin });
     if (!user) {
-      return res.status(400).json({ message: 'User not found' });
+        return res.status(404).json({
+            status: 404,
+            message: 'user not found',
+            data:{
+                
+            }
+          });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -74,11 +80,45 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-   return   res.status(200).json({ statusCode:200,message:"user login successfully",token:token });
+   return res.status(200).json({
+        status: 200,
+        message: 'Logged in successfully',
+        data: {
+          token,
+          user: {
+            _id: user._id,
+            mspin:user.mspin,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
+        }
+      });
   } catch (err) {
     console.error(err.message);
     return   res.status(500).json({ statusCode:500,message:"user login successfully",error:err });
   }
 });
-
+router.post('/update-user-data', async (req, res) => {
+    const { mspin, data } = req.body;
+  
+    if (!mspin || !Array.isArray(data)) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+   try {
+      const user = await User.findOneAndUpdate(
+        { mspin },
+        { $set: { data } },
+        { new: true } 
+      );
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+     return res.status(200).json({ message: 'User data updated successfully', user });
+    } catch (error) {
+      console.error(error);
+    return  res.status(500).json({ message: 'Server error' });
+    }
+  });
 module.exports = router;
